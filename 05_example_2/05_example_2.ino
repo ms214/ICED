@@ -8,23 +8,24 @@ void setup() {
     ; // wait for serial port to connect.
   }
   Serial.println("Hello World!");
-  count = toggle = 0;
-  //digitalWrite(PIN_LED, 1); // turn off LED.
+  count = 0;
+  toggle = 1;
+  digitalWrite(PIN_LED, toggle); // turn on LED.
 }
 
 void loop() {
+  if(count == 0){
+    delay(1000);
+  }
   count = count +1 ;
   Serial.println(count);
-  if(count <= 12 && count > 1){
+  if(count <= 10){
     toggle = toggle_state(toggle);
     digitalWrite(PIN_LED, toggle);
     delay(100);
-  }else if(count > 12){
-    digitalWrite(PIN_LED, 0);
+  }else if(count > 10){
+    digitalWrite(PIN_LED, toggle_state(toggle));
     while(1){} // infinite loop
-  }else{
-    digitalWrite(PIN_LED, 1);
-    delay(1000);
   }
 }
 
