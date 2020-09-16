@@ -15,15 +15,15 @@ void setup() {
 void loop() {
   count = count +1 ;
   Serial.println(count);
-  if(count <= 10 && count > 1){
+  if(count <= 12 && count > 1){
     toggle = toggle_state(toggle);
     digitalWrite(PIN_LED, toggle);
     delay(100);
-  }else if(count > 10){
-    digitalWrite(PIN_LED, 1);
-    delay(1000);
-  }else{
+  }else if(count > 12){
     digitalWrite(PIN_LED, 0);
+    while(1){} // infinite loop
+  }else{
+    digitalWrite(PIN_LED, 1);
     delay(1000);
   }
 }
