@@ -15,15 +15,14 @@ void loop() {
   if(count == 0){
     delay(1000);
   }
-  count = count +1 ;
-  if(count <= 10){
+  while(count<10){
+    count = count +1 ;
     toggle = toggle_state(toggle);
     digitalWrite(PIN_LED, toggle);
     delay(100);
-  }else if(count > 10){
-    digitalWrite(PIN_LED, toggle_state(toggle));
-    while(1){} // infinite loop
   }
+  digitalWrite(PIN_LED, 1);
+  while(1){} // infinite loop
 }
 
 int toggle_state(int toggle) {
