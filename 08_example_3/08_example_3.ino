@@ -38,7 +38,7 @@ void setup() {
   last_sampling_time = 0;
 
 // initialize last distance raw
-  last_dist_raw = 0;
+  last_dist_raw = 0.0;
 
 // initialize duty
   duty = 255;
