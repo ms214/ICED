@@ -18,7 +18,8 @@ unsigned long last_sampling_time; // unit: ms
 float scale; // used for pulse duration to distance conversion
 int n = N, count = 0;
 float median = 0.0;
-float samples[N];
+float samples[N] = {0};
+float medians[N] = {0};
 
 void setup() {
 // initialize GPIO pins
@@ -87,16 +88,22 @@ float USS_measure(int TRIG, int ECHO)
   }else{
     count = 0;
   }
+
+  //copy
+  for(int i = 0; i<n; i++){
+    medians[i] = samples[i];
+  }
+  
   //sorting
   for(int i = 0; i< n; i++){
     for(int j = i; j< n-(i+1); j++){
-      if(samples[j] < samples[j+1]){
-        float tmp = samples[j+1];
-        samples[j+1] = samples[j];
-        samples[j] = tmp;
+      if(medians[j] < medians[j+1]){
+        float tmp = medians[j+1];
+        medians[j+1] = medians[j];
+        medians[j] = tmp;
       }  
     } 
   }
-  median = samples[n/2];
+  median = medians[n/2];
   return reading;
 }
