@@ -18,16 +18,16 @@
 #define _DIST_MAX 410   //[3036] 측정 가능한 최대 거리
 
 // Distance sensor
-#define _DIST_ALPHA 0.3   //[3023] EMA 가중치
+#define _DIST_ALPHA 0.1  //[3023] EMA 가중치
 
 // Servo range 
-#define _DUTY_MIN 1240                 //[3028] 서보 각도 최소값
-#define _DUTY_NEU 1450    //[3038] 레일 수평 서보 펄스폭
-#define _DUTY_MAX 1740    //[3031] 서보 최대값
+#define _DUTY_MIN 1220                 //[3028] 서보 각도 최소값
+#define _DUTY_NEU 1400    //[3038] 레일 수평 서보 펄스폭
+#define _DUTY_MAX 1620    //[3031] 서보 최대값
 
 // Servo speed control
 #define _SERVO_ANGLE 30   //[3030] servo angle limit 실제 서보의 동작크기
-#define _SERVO_SPEED 30            // [3040] 서보의 각속도(초당 각도 변화량)
+#define _SERVO_SPEED 1000            // [3040] 서보의 각속도(초당 각도 변화량)
 
 // Event periods
 #define _INTERVAL_DIST 20   //[3039]적외선 센서 측정 간격
@@ -35,7 +35,12 @@
 #define _INTERVAL_SERIAL 100       //[3030]시리얼 플로터 갱신간격
 
 // PID parameters
-#define _KP 1.2     //[3039] 비례 제어의 상수 값
+#define _KP 1.4     //[3039] 비례 제어의 상수 값 -> 1.4
+#define _KD 7.0    // 미분 제어 상수 값
+//Unstable = 20
+//Overdamped = 8.6
+//underdamped = 4.5
+//critically damped = 7.0
 
 // For Filter
 #define DELAY_MICROS 1500
@@ -98,6 +103,8 @@ Serial.begin(57600);  //[3039] 시리얼 모니터 속도 지정
 
   duty_neutral = _DUTY_NEU;
   duty_curr = duty_neutral;
+
+  error_prev = 0;
  
 }
   
@@ -126,19 +133,25 @@ void loop() {
 
   if(event_dist) {
      event_dist = false;    // [3037]
-     dist_raw = ir_distance();
+     dist_raw = ir_distance_filtered();
   // get a distance reading from the distance sensor
      dist_ema = ir_distance_filtered();   // [3037]
 
   // PID control logic
     error_curr = dist_target - dist_ema; //[3034] 목표위치와 실제위치의 오차값 
-    pterm =  error_curr; //[3034]
-    control = _KP * pterm; //[3034]
+    pterm = _KP * error_curr; //[3034]
+    dterm = _KD * (error_curr - error_prev);
+    control = pterm + _KD * dterm; //[3034]
 
   // duty_target = f(duty_neutral, control)
-    duty_target = duty_neutral + control;
+    duty_target = _DUTY_NEU + control;
 
   // keep duty_target value within the range of [_DUTY_MIN, _DUTY_MAX]
+
+    if(duty_target < _DUTY_MIN) duty_target = _DUTY_MIN; // lower limit
+    if(duty_target > _DUTY_MAX) duty_target = _DUTY_MAX; // upper limit
+  // update error_prev
+    error_prev = error_curr;
 
   }
   
@@ -161,11 +174,13 @@ void loop() {
   }
   
   if(event_serial) {
-    event_serial = false;               // [3030]
+    event_serial = false;
     Serial.print("dist_ir:");
     Serial.print(dist_raw);
     Serial.print(",pterm:");
     Serial.print(map(pterm,-1000,1000,510,610));
+    Serial.print(",dterm:");
+    Serial.print(map(dterm,-1000,1000,510,610));
     Serial.print(",duty_target:");
     Serial.print(map(duty_target,1000,2000,410,510));
     Serial.print(",duty_curr:");
@@ -186,7 +201,7 @@ float under_noise_filter(void){
   int largestReading = 0;
   for (int i = 0; i< samples_num; i++){
     currReading = ir_distance();
-    currReading = 100.0 + 300.0/(306 - 71)*(currReading-71);
+    currReading = 100.0 + 300.0/(319 - 70)*(currReading-70);
     if(currReading > largestReading) largestReading = currReading;
     delayMicroseconds(DELAY_MICROS);
   }

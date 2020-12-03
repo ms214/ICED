@@ -25,7 +25,7 @@ float ir_distance(void){ // return value unit: mm
 
 void loop() {
   float raw_dist = ir_distance();
-  float dist_cal = 100.0 + 300.0/(300 - 70)*(raw_dist - 70);
+  float dist_cal = 100.0 + 300.0/(319 - 70)*(raw_dist - 70);
   dist_ema = alpha*dist_cal + (1-alpha)*dist_ema;
   
   Serial.print("min:0,max:500,dist:");
@@ -35,6 +35,6 @@ void loop() {
   Serial.print(",dist_ema:");
   Serial.println(dist_ema+100);
 
-  if(dist_ema < 270) mysv.writeMicroseconds(1740);
-  else if(dist_ema > 270) mysv.writeMicroseconds(1240);
+  //if(dist_ema < 270) mysv.writeMicroseconds(1740);
+  //else if(dist_ema > 270) mysv.writeMicroseconds(1240);
 }
