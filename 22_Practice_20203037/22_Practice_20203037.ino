@@ -15,7 +15,7 @@
 // Framework setting
 #define _DIST_TARGET 255            // [3040] 레일플레이트의 중간지점(목표지점=25.5cm)
 #define _DIST_MIN 100                    //[3035] 측정 최소 거리
-#define _DIST_MAX 410   //[3036] 측정 가능한 최대 거리
+#define _DIST_MAX 410               //[3036] 측정 가능한 최대 거리
 
 // Distance sensor
 #define _DIST_ALPHA 0.1  //[3023] EMA 가중치
@@ -26,7 +26,7 @@
 #define _DUTY_MAX 1620    //[3031] 서보 최대값
 
 // Servo speed control
-#define _SERVO_ANGLE 30   //[3030] servo angle limit 실제 서보의 동작크기
+#define _SERVO_ANGLE 50   //[3030] servo angle limit 실제 서보의 동작크기
 #define _SERVO_SPEED 1000            // [3040] 서보의 각속도(초당 각도 변화량)
 
 // Event periods
@@ -35,12 +35,9 @@
 #define _INTERVAL_SERIAL 100       //[3030]시리얼 플로터 갱신간격
 
 // PID parameters
-#define _KP 1.4     //[3039] 비례 제어의 상수 값 -> 1.4
-#define _KD 7.0    // 미분 제어 상수 값
-//Unstable = 20
-//Overdamped = 8.6
-//underdamped = 4.5
-//critically damped = 7.0
+#define _KP 3.5   //[3039] 비례 제어의 상수 값 -> 3.0
+#define _KD 96.7    // 미분 제어 상수 값  96.7
+#define _KI 0.1    // 적분 제어 상수 값  0.1
 
 // For Filter
 #define DELAY_MICROS 1500
@@ -105,6 +102,8 @@ Serial.begin(57600);  //[3039] 시리얼 모니터 속도 지정
   duty_curr = duty_neutral;
 
   error_prev = 0;
+
+  iterm = 0;
  
 }
   
@@ -139,9 +138,10 @@ void loop() {
 
   // PID control logic
     error_curr = dist_target - dist_ema; //[3034] 목표위치와 실제위치의 오차값 
-    pterm = _KP * error_curr; //[3034]
+    pterm = _KP * error_curr;   //[3034]
     dterm = _KD * (error_curr - error_prev);
-    control = pterm + _KD * dterm; //[3034]
+    iterm += _KI * error_curr;
+    control = pterm + dterm + iterm; //[3034]
 
   // duty_target = f(duty_neutral, control)
     duty_target = _DUTY_NEU + control;
@@ -175,17 +175,21 @@ void loop() {
   
   if(event_serial) {
     event_serial = false;
-    Serial.print("dist_ir:");
-    Serial.print(dist_raw);
-    Serial.print(",pterm:");
+    Serial.print("IR:");
+    Serial.print(dist_ema);
+    Serial.print(",T:");
+    Serial.print(dist_target);
+    Serial.print(",P:");
     Serial.print(map(pterm,-1000,1000,510,610));
-    Serial.print(",dterm:");
+    Serial.print(",D:");
     Serial.print(map(dterm,-1000,1000,510,610));
-    Serial.print(",duty_target:");
+    Serial.print(",I:");
+    Serial.print(map(iterm,-1000,1000,510,610));
+    Serial.print(",DTT:");
     Serial.print(map(duty_target,1000,2000,410,510));
-    Serial.print(",duty_curr:");
+    Serial.print(",DTC:");
     Serial.print(map(duty_curr,1000,2000,410,510));
-    Serial.println(",Min:100,Low:200,dist_target:255,High:310,Max:410");
+    Serial.println(",-G:245,+G:265,m:0,M:800");
   }
 }
 
