@@ -103,7 +103,7 @@ Serial.begin(57600);  //[3039] 시리얼 모니터 속도 지정
 
   error_prev = 0;
 
-  iterm = 0;
+  pterm = dterm = iterm = 0;
  
 }
   
